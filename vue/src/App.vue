@@ -2,9 +2,7 @@
 </script>
 
 <template>
-  <div id="app">
-    <h1>Morpion</h1>
-  </div>
+  <router-view />
 </template>
 
 <style scoped>
