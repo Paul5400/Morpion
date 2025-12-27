@@ -10,7 +10,9 @@ export default {
       // Informations de l'utilisateur courant (pour le player_id)
       user: null,
       // Instance de la WebSocket
-      socket: null
+      socket: null,
+      // Message d'erreur éventuel
+      error: null
     }
   },
   // Chargement des données avant d'afficher la page
@@ -90,6 +92,20 @@ export default {
       const cell = this.game.board[row-1][col-1]
       if (!cell) return ''
       return cell === this.game.user1_id ? 'X' : 'O'
+    },
+
+    async play(row, col) {
+      this.error = null
+      try {
+        const response = await api.patch(`/api/games/${this.game.id}/play/${row}/${col}`)
+        this.game = response.data
+      } catch (error) {
+        if (error.response && error.response.data && error.response.data.errors) {
+          this.error = error.response.data.errors[0]
+        } else {
+          this.error = 'Impossible de jouer cette case.'
+        }
+      }
     }
   }
 }
@@ -112,15 +128,30 @@ export default {
       </div>
     </div>
 
-    <!-- Grille de jeu (Ex 7) -->
-    <div v-if="game.user2" class="game-container">
+    <!-- Affichage des erreurs -->
+    <div v-if="error" class="error">
+      {{ error }}
+    </div>
+
+    <!-- Grille de jeu (Ex 7 & Ex 9) -->
+    <div v-if="game.user2 && game.status !== 2" class="game-container">
       <div class="grid">
         <div v-for="r in 3" :key="'r'+r" class="row">
-          <div v-for="c in 3" :key="'c'+c" class="cell">
+          <div v-for="c in 3" :key="'c'+c" class="cell" @click="play(r, c)">
             {{ getCellChar(r, c) }}
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Fin de partie (Ex 9) -->
+    <div v-if="game.user2 && game.status === 2" class="end-game">
+      <h1 v-if="game.winner_id">
+        {{ game.winner_id === game.user1_id ? game.user1.name : game.user2.name }}<br>
+        A GAGNÉ !!
+      </h1>
+      <h1 v-else>MATCH NUL</h1>
+      <button @click="goBack">RETOUR</button>
     </div>
 
     <!-- Attente adversaire (Ex 7) -->
