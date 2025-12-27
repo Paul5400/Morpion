@@ -104,10 +104,10 @@ export default {
 
     <!-- Infos joueurs (Ex 7) -->
     <div class="players-info">
-      <div>
+      <div :class="{ active: game.next_player_id === game.user1_id }">
         JOUEUR 1: {{ game.user1 ? game.user1.name : 'John Doe' }}
       </div>
-      <div>
+      <div :class="{ active: game.next_player_id === game.user2_id }">
         JOUEUR 2: {{ game.user2 ? game.user2.name : '...waiting' }}
       </div>
     </div>
