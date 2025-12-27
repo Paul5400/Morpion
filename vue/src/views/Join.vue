@@ -1,23 +1,23 @@
 <script>
 import api from '@/api'
+import ErrorDisplay from '@/components/ErrorDisplay.vue'
 
 export default {
   name: 'JoinView',
+  components: {
+    ErrorDisplay
+  },
   data() {
     return {
-      // Code de la partie à rejoindre
       gameCode: '',
-      // Erreurs éventuelles
       errors: []
     }
   },
   methods: {
-    // Tente de rejoindre une partie avec le code saisi
     async joinGame() {
       this.errors = []
       try {
         const response = await api.patch(`/api/games/${this.gameCode}/join`)
-        // Si succès, l'API retourne les infos de la partie, on redirige vers l'id
         this.$router.push({ name: 'game', params: { id: response.data.id } })
       } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
@@ -27,7 +27,6 @@ export default {
         }
       }
     },
-    // Retour à l'accueil
     goBack() {
       this.$router.push({ name: 'home' })
     }
@@ -42,12 +41,7 @@ export default {
       <button @click="goBack" class="close-btn">X</button>
     </div>
 
-    <!-- Affichage local des erreurs (Ex 8) -->
-    <div v-if="errors.length" class="errors">
-      <ul>
-        <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
-      </ul>
-    </div>
+    <ErrorDisplay :errors="errors" />
 
     <form @submit.prevent="joinGame">
       <div class="field">
@@ -69,11 +63,5 @@ export default {
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-}
-.errors {
-  color: red;
-  border: 1px solid red;
-  padding: 10px;
-  margin-bottom: 15px;
 }
 </style>

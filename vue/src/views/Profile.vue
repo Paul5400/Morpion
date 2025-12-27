@@ -1,16 +1,18 @@
 <script>
 import api from '@/api'
+import ErrorDisplay from '@/components/ErrorDisplay.vue'
 
 export default {
   name: 'ProfileView',
+  components: {
+    ErrorDisplay
+  },
   data() {
     return {
-      // Données de l'utilisateur
       user: {
         name: '',
         email: ''
       },
-      // Liste des erreurs potentielles retournées par l'API
       errors: []
     }
   },
@@ -28,7 +30,6 @@ export default {
     }
   },
   methods: {
-    // Enregistre les modifications du profil
     async saveProfile() {
       this.errors = []
       try {
@@ -36,14 +37,12 @@ export default {
         alert('Profil mis à jour avec succès !')
       } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
-          // On récupère les messages d'erreurs du serveur
           this.errors = error.response.data.errors
         } else {
           this.errors = ['Une erreur est survenue lors de la mise à jour.']
         }
       }
     },
-    // Retour à l'accueil
     goBack() {
       this.$router.push({ name: 'home' })
     }
@@ -58,12 +57,7 @@ export default {
       <button @click="goBack" class="close-btn">X</button>
     </div>
 
-    <!-- Affichage local des erreurs (Ex 5) -->
-    <div v-if="errors.length" class="errors">
-      <ul>
-        <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
-      </ul>
-    </div>
+    <ErrorDisplay :errors="errors" />
 
     <form @submit.prevent="saveProfile">
       <div class="field">
@@ -89,12 +83,6 @@ export default {
   margin-bottom: 15px;
   display: flex;
   flex-direction: column;
-}
-.errors {
-  color: red;
-  border: 1px solid red;
-  padding: 10px;
-  margin-bottom: 10px;
 }
 .close-btn {
   cursor: pointer;

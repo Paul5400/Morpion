@@ -4,22 +4,18 @@ import api from '@/api'
 export default {
   name: 'HomeView',
   methods: {
-    // Méthode pour créer une nouvelle partie
     async createGame() {
       try {
         const response = await api.post('/api/games', {})
-        // On redirige vers la vue de la partie avec l'id récupéré
         this.$router.push({ name: 'game', params: { id: response.data.id } })
       } catch (error) {
         console.error('Erreur lors de la création de la partie :', error)
         alert('Impossible de créer une partie.')
       }
     },
-    // Navigation vers la page pour rejoindre une partie
     joinGame() {
       this.$router.push({ name: 'join' })
     },
-    // Navigation vers la page de profil
     goUserProfile() {
       this.$router.push({ name: 'profile' })
     }

@@ -5,13 +5,9 @@ export default {
   name: 'GameView',
   data() {
     return {
-      // Informations de la partie
       game: null,
-      // Informations de l'utilisateur courant (pour le player_id)
       user: null,
-      // Instance de la WebSocket
       socket: null,
-      // Message d'erreur éventuel
       error: null
     }
   },
@@ -40,13 +36,11 @@ export default {
     }
   },
   methods: {
-    // Initialisation de la connexion WebSocket
+    // Connexion WebSocket pour synchronisation temps réel
     waitForOpponentMove() {
-      // On utilise l'URL spécifiée dans le sujet
       this.socket = new WebSocket('wss://morpion-api.edu.netlor.fr/websockets')
 
       this.socket.onopen = () => {
-        // Envoi du message de connexion requis par l'API
         const connectMsg = {
           action: 'connect',
           game_id: this.game.id,
@@ -57,11 +51,9 @@ export default {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data)
-        // Traitement des messages WS
         switch (data.action) {
           case 'opponent-join':
           case 'opponent-play':
-            // On rafraîchit les données de la partie pour voir l'adversaire ou son coup
             this.refreshGameData()
             break
           case 'opponent-quit':
@@ -72,7 +64,6 @@ export default {
       }
     },
 
-    // Rafraîchit les informations de la partie via l'API
     async refreshGameData() {
       try {
         const response = await api.get(`/api/games/${this.game.id}`)
@@ -82,12 +73,10 @@ export default {
       }
     },
 
-    // Retour à l'accueil
     goBack() {
       this.$router.push({ name: 'home' })
     },
 
-    // Helper pour savoir quel symbole afficher (X ou O)
     getCellChar(row, col) {
       const cell = this.game.board[row-1][col-1]
       if (!cell) return ''
@@ -118,7 +107,6 @@ export default {
       <button @click="goBack">Quitter la partie</button>
     </div>
 
-    <!-- Infos joueurs (Ex 7) -->
     <div class="players-info">
       <div :class="{ active: game.next_player_id === game.user1_id }">
         JOUEUR 1: {{ game.user1 ? game.user1.name : 'John Doe' }}
@@ -133,7 +121,7 @@ export default {
       {{ error }}
     </div>
 
-    <!-- Grille de jeu (Ex 7 & Ex 9) -->
+    <!-- Grille de jeu -->
     <div v-if="game.user2 && game.status !== 2" class="game-container">
       <div class="grid">
         <div v-for="r in 3" :key="'r'+r" class="row">
@@ -144,7 +132,7 @@ export default {
       </div>
     </div>
 
-    <!-- Fin de partie (Ex 9) -->
+    <!-- Fin de partie -->
     <div v-if="game.user2 && game.status === 2" class="end-game">
       <h1 v-if="game.winner_id">
         {{ game.winner_id === game.user1_id ? game.user1.name : game.user2.name }}<br>
@@ -154,7 +142,7 @@ export default {
       <button @click="goBack">RETOUR</button>
     </div>
 
-    <!-- Attente adversaire (Ex 7) -->
+    <!-- Attente adversaire -->
     <div v-else class="waiting">
       <p>En attente d'un adversaire ...</p>
       <p>Code à communiquer : <strong>{{ game.code }}</strong></p>
