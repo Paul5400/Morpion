@@ -13,6 +13,7 @@ export default {
         name: '',
         email: ''
       },
+      apiKey: localStorage.getItem('morpion_api_key') || '{uXxoh!tZLQF',
       errors: []
     }
   },
@@ -34,7 +35,8 @@ export default {
       this.errors = []
       try {
         await api.put('/api/profile', this.user)
-        alert('Profil mis à jour avec succès !')
+        localStorage.setItem('morpion_api_key', this.apiKey)
+        alert('Profil et clé API mis à jour avec succès !')
       } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
           this.errors = error.response.data.errors
@@ -67,6 +69,10 @@ export default {
       <div class="field">
         <label for="email">Email</label>
         <input id="email" v-model="user.email" type="email" required />
+      </div>
+      <div class="field">
+        <label for="apiKey">Clé API (pour test 2 joueurs)</label>
+        <input id="apiKey" v-model="apiKey" type="text" required />
       </div>
       <button type="submit">ENREGISTRER</button>
     </form>
