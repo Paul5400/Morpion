@@ -21,6 +21,10 @@ export default {
       next(vm => {
         vm.game = gameRes.data
         vm.user = profileRes.data
+        console.log('=== GAME DATA ===')
+        console.log(JSON.stringify(vm.game, null, 2))
+        console.log('=== USER DATA ===')
+        console.log(JSON.stringify(vm.user, null, 2))
         // Une fois les données chargées, on lance les WebSockets
         vm.waitForOpponentMove()
       })
@@ -78,9 +82,10 @@ export default {
     },
 
     getCellChar(row, col) {
-      const cell = this.game.board[row-1][col-1]
-      if (!cell) return ''
-      return cell === this.game.user1_id ? 'X' : 'O'
+      const cellKey = `r${row}c${col}`
+      const cellValue = this.game[cellKey]
+      if (!cellValue) return ''
+      return cellValue === this.game.owner_id ? 'X' : 'O'
     },
 
     async play(row, col) {
@@ -108,11 +113,11 @@ export default {
     </div>
 
     <div class="players-info">
-      <div :class="{ active: game.next_player_id === game.user1_id }">
-        JOUEUR 1: {{ game.user1 ? game.user1.name : 'John Doe' }}
+      <div :class="{ active: game.next_player_id === game.owner_id }">
+        JOUEUR 1 (Propriétaire): {{ game.owner.name }}
       </div>
-      <div :class="{ active: game.next_player_id === game.user2_id }">
-        JOUEUR 2: {{ game.user2 ? game.user2.name : '...waiting' }}
+      <div :class="{ active: game.next_player_id === game.opponent_id }">
+        JOUEUR 2: {{ game.opponent ? game.opponent.name : 'En attente...' }}
       </div>
     </div>
 
@@ -122,7 +127,7 @@ export default {
     </div>
 
     <!-- Grille de jeu -->
-    <div v-if="game.user2 && game.status !== 2" class="game-container">
+    <div v-if="game.opponent && game.state !== 2" class="game-container">
       <div class="grid">
         <div v-for="r in 3" :key="'r'+r" class="row">
           <div v-for="c in 3" :key="'c'+c" class="cell" @click="play(r, c)">
@@ -133,9 +138,9 @@ export default {
     </div>
 
     <!-- Fin de partie -->
-    <div v-if="game.user2 && game.status === 2" class="end-game">
+    <div v-if="game.opponent && game.state === 2" class="end-game">
       <h1 v-if="game.winner_id">
-        {{ game.winner_id === game.user1_id ? game.user1.name : game.user2.name }}<br>
+        {{ game.winner_id === game.owner_id ? game.owner.name : game.opponent.name }}<br>
         A GAGNÉ !!
       </h1>
       <h1 v-else>MATCH NUL</h1>
@@ -143,7 +148,7 @@ export default {
     </div>
 
     <!-- Attente adversaire -->
-    <div v-else class="waiting">
+    <div v-else-if="!game.opponent" class="waiting">
       <p>En attente d'un adversaire ...</p>
       <p>Code à communiquer : <strong>{{ game.code }}</strong></p>
     </div>
