@@ -100,20 +100,6 @@ export default {
           this.error = 'Impossible de jouer cette case.'
         }
       }
-    },
-
-    // Permet de créer une nouvelle partie rapidement à la fin
-    async rejouer() {
-      try {
-        const response = await api.post('/api/games', {})
-        const newCode = response.data.code
-        await navigator.clipboard.writeText(newCode)
-        alert(`Nouveau code copié : ${newCode}\nDonnez-le à votre adversaire !`)
-        this.$router.push({ name: 'game', params: { id: response.data.id } })
-      } catch (error) {
-        console.error('Erreur lors de la création de la nouvelle partie:', error)
-        this.error = 'Impossible de créer une nouvelle partie.'
-      }
     }
   }
 }
@@ -169,7 +155,6 @@ export default {
           <h1 v-else class="draw-title">MATCH NUL</h1>
         </div>
         <div class="end-actions">
-          <button @click="rejouer" class="btn-primary">REJOUER</button>
           <button @click="goBack" class="btn-secondary">MENU PRINCIPAL</button>
         </div>
       </div>
