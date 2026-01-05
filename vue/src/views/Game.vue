@@ -11,7 +11,6 @@ export default {
       error: null
     }
   },
-  // Chargement des données avant d'afficher la page
   async beforeRouteEnter(to, from, next) {
     try {
       const [gameRes, profileRes] = await Promise.all([
@@ -25,7 +24,6 @@ export default {
         console.log(JSON.stringify(vm.game, null, 2))
         console.log('=== USER DATA ===')
         console.log(JSON.stringify(vm.user, null, 2))
-        // Une fois les données chargées, on lance les WebSockets
         vm.waitForOpponentMove()
       })
     } catch (error) {
@@ -33,14 +31,12 @@ export default {
       next(false)
     }
   },
-  // Sécurité : on ferme la socket si on quitte le composant
   beforeUnmount() {
     if (this.socket) {
       this.socket.close()
     }
   },
   methods: {
-    // Connexion WebSocket pour synchronisation temps réel
     waitForOpponentMove() {
       this.socket = new WebSocket('wss://morpion-api.edu.netlor.fr/websockets')
 
@@ -64,6 +60,12 @@ export default {
             alert('Votre adversaire a quitté la partie.')
             this.goBack()
             break
+          case 'rematch-vote':
+            this.rematchVotes.add(data.player_id)
+            if (this.rematchVotes.size === 2) {
+              this.createRematch()
+            }
+            break
         }
       }
     },
@@ -85,7 +87,6 @@ export default {
       const cellKey = `r${row}c${col}`
       const cellValue = this.game[cellKey]
       if (!cellValue) return ''
-      // L'API stocke 1 pour le premier joueur (owner) et 2 pour le second (opponent)
       return cellValue === 1 ? 'X' : 'O'
     },
 
@@ -100,6 +101,19 @@ export default {
         } else {
           this.error = 'Impossible de jouer cette case.'
         }
+      }
+    },
+
+    async rejouer() {
+      try {
+        const response = await api.post('/api/games', {})
+        const newCode = response.data.code
+        await navigator.clipboard.writeText(newCode)
+        alert(`Code copié dans le presse-papier : ${newCode}\nPartagez-le à votre adversaire !`)
+        this.$router.push({ name: 'game', params: { id: response.data.id } })
+      } catch (error) {
+        console.error('Erreur lors de la création de la nouvelle partie:', error)
+        this.error = 'Impossible de créer une nouvelle partie.'
       }
     }
   }
@@ -145,7 +159,9 @@ export default {
         A GAGNÉ !!
       </h1>
       <h1 v-else>MATCH NUL</h1>
-      <button @click="goBack">RETOUR</button>
+      
+      <button @click="rejouer" class="rematch-btn">REJOUER</button>
+      <button @click="goBack" class="back-btn">RETOUR AU MENU</button>
     </div>
 
     <!-- Attente adversaire -->
@@ -207,5 +223,30 @@ export default {
   text-align: center;
   padding: 50px;
   border: 5px solid gold;
+}
+.rematch-btn {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+.rematch-btn:hover {
+  background-color: #45a049;
+}
+.back-btn {
+  padding: 10px 20px;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+.back-btn:hover {
+  background-color: #555;
 }
 </style>
