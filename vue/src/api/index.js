@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const DEFAULT_KEY = 'OPyk>I6jjtJr'
+const DEFAULT_KEY = '{uXxoh!tZLQF'
 
 const instance = axios.create({
   baseURL: 'https://morpion-api.edu.netlor.fr',
