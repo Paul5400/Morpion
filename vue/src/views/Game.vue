@@ -85,11 +85,8 @@ export default {
       const cellKey = `r${row}c${col}`
       const cellValue = this.game[cellKey]
       if (!cellValue) return ''
-      console.log('Cell:', cellKey, 'Value:', cellValue, 'Type:', typeof cellValue)
-      console.log('Owner ID:', this.game.owner_id, 'Type:', typeof this.game.owner_id)
-      console.log('Match?', cellValue === this.game.owner_id)
-      // Le propriétaire (owner) joue avec X, l'adversaire avec O
-      return cellValue === this.game.owner_id ? 'X' : 'O'
+      // L'API stocke 1 pour le premier joueur (owner) et 2 pour le second (opponent)
+      return cellValue === 1 ? 'X' : 'O'
     },
 
     async play(row, col) {
