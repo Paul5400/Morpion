@@ -13,7 +13,7 @@ export default {
         name: '',
         email: ''
       },
-      apiKey: localStorage.getItem('morpion_api_key') || '{uXxoh!tZLQF',
+      apiKey: localStorage.getItem('morpion_api_key') || 'OPyk>I6jjtJr',
       errors: []
     }
   },
