@@ -85,6 +85,7 @@ export default {
       const cellKey = `r${row}c${col}`
       const cellValue = this.game[cellKey]
       if (!cellValue) return ''
+      // Le propriétaire (owner) joue avec X, l'adversaire avec O
       return cellValue === this.game.owner_id ? 'X' : 'O'
     },
 
