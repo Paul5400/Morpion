@@ -5,12 +5,13 @@ export default {
   name: 'GameView',
   data() {
     return {
-      game: null,
-      user: null,
-      socket: null,
-      error: null
+      game: null,      // Données de la partie en cours
+      user: null,      // Profil de l'utilisateur actuel
+      socket: null,    // Connexion WebSocket pour le temps réel
+      error: null      // Message d'erreur éventuel
     }
   },
+  // Récupération des données avant l'affichage de la route
   async beforeRouteEnter(to, from, next) {
     try {
       const [gameRes, profileRes] = await Promise.all([
@@ -20,10 +21,7 @@ export default {
       next(vm => {
         vm.game = gameRes.data
         vm.user = profileRes.data
-        console.log('=== GAME DATA ===')
-        console.log(JSON.stringify(vm.game, null, 2))
-        console.log('=== USER DATA ===')
-        console.log(JSON.stringify(vm.user, null, 2))
+        // On lance l'écoute des messages du serveur (WebSocket)
         vm.waitForOpponentMove()
       })
     } catch (error) {
@@ -31,12 +29,14 @@ export default {
       next(false)
     }
   },
+  // Fermeture de la socket quand on quitte la page
   beforeUnmount() {
     if (this.socket) {
       this.socket.close()
     }
   },
   methods: {
+    // Établit la connexion WebSocket pour synchroniser les coups
     waitForOpponentMove() {
       this.socket = new WebSocket('wss://morpion-api.edu.netlor.fr/websockets')
 
@@ -54,22 +54,17 @@ export default {
         switch (data.action) {
           case 'opponent-join':
           case 'opponent-play':
-            this.refreshGameData()
+            this.refreshGameData() // Rafraîchit les données du plateau
             break
           case 'opponent-quit':
             alert('Votre adversaire a quitté la partie.')
             this.goBack()
             break
-          case 'rematch-vote':
-            this.rematchVotes.add(data.player_id)
-            if (this.rematchVotes.size === 2) {
-              this.createRematch()
-            }
-            break
         }
       }
     },
 
+    // Récupère les dernières données de la partie via l'API
     async refreshGameData() {
       try {
         const response = await api.get(`/api/games/${this.game.id}`)
@@ -79,10 +74,12 @@ export default {
       }
     },
 
+    // Retour à l'accueil
     goBack() {
       this.$router.push({ name: 'home' })
     },
 
+    // Détermine le symbole (X ou O) à afficher dans une case
     getCellChar(row, col) {
       const cellKey = `r${row}c${col}`
       const cellValue = this.game[cellKey]
@@ -90,6 +87,7 @@ export default {
       return cellValue === 1 ? 'X' : 'O'
     },
 
+    // Envoie un coup au serveur
     async play(row, col) {
       this.error = null
       try {
@@ -104,12 +102,13 @@ export default {
       }
     },
 
+    // Permet de créer une nouvelle partie rapidement à la fin
     async rejouer() {
       try {
         const response = await api.post('/api/games', {})
         const newCode = response.data.code
         await navigator.clipboard.writeText(newCode)
-        alert(`Code copié dans le presse-papier : ${newCode}\nPartagez-le à votre adversaire !`)
+        alert(`Nouveau code copié : ${newCode}\nDonnez-le à votre adversaire !`)
         this.$router.push({ name: 'game', params: { id: response.data.id } })
       } catch (error) {
         console.error('Erreur lors de la création de la nouvelle partie:', error)
@@ -122,131 +121,251 @@ export default {
 
 <template>
   <div class="game-view" v-if="game">
-    <div class="header">
+    <div class="game-header">
       <h2>Partie #{{ game.code }}</h2>
-      <button @click="goBack">Quitter la partie</button>
+      <button @click="goBack" class="btn-quit">QUITTER</button>
     </div>
 
-    <div class="players-info">
-      <div :class="{ active: game.next_player_id === game.owner_id }">
-        JOUEUR 1 (Propriétaire): {{ game.owner.name }}
-      </div>
-      <div :class="{ active: game.next_player_id === game.opponent_id }">
-        JOUEUR 2: {{ game.opponent ? game.opponent.name : 'En attente...' }}
-      </div>
-    </div>
-
-    <!-- Affichage des erreurs -->
-    <div v-if="error" class="error">
-      {{ error }}
-    </div>
-
-    <!-- Grille de jeu -->
-    <div v-if="game.opponent && game.state !== 2" class="game-container">
-      <div class="grid">
-        <div v-for="r in 3" :key="'r'+r" class="row">
-          <div v-for="c in 3" :key="'c'+c" class="cell" @click="play(r, c)">
-            {{ getCellChar(r, c) }}
-          </div>
+    <div class="game-card">
+      <div class="players-info">
+        <div class="player-slot" :class="{ active: game.next_player_id === game.owner_id }">
+          <span class="symbol">X</span>
+          <span class="name">{{ game.owner.name }}</span>
+        </div>
+        <div class="vs">VS</div>
+        <div class="player-slot" :class="{ active: game.next_player_id === game.opponent_id }">
+          <span class="symbol">O</span>
+          <span class="name">{{ game.opponent ? game.opponent.name : 'Attente...' }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- Fin de partie -->
-    <div v-if="game.opponent && game.state === 2" class="end-game">
-      <h1 v-if="game.winner_id">
-        {{ game.winner_id === game.owner_id ? game.owner.name : game.opponent.name }}<br>
-        A GAGNÉ !!
-      </h1>
-      <h1 v-else>MATCH NUL</h1>
-      
-      <button @click="rejouer" class="rematch-btn">REJOUER</button>
-      <button @click="goBack" class="back-btn">RETOUR AU MENU</button>
-    </div>
+      <div v-if="error" class="error-badge">
+        {{ error }}
+      </div>
 
-    <!-- Attente adversaire -->
-    <div v-else-if="!game.opponent" class="waiting">
-      <p>En attente d'un adversaire ...</p>
-      <p>Code à communiquer : <strong>{{ game.code }}</strong></p>
+      <!-- Plateau de jeu -->
+      <div v-if="game.opponent && game.state !== 2" class="board-container">
+        <div class="grid">
+          <div v-for="r in 3" :key="'r'+r" class="row">
+            <div v-for="c in 3" :key="'c'+c" 
+                 class="cell" 
+                 :class="{ 'cell-filled': getCellChar(r, c) }"
+                 @click="play(r, c)">
+              {{ getCellChar(r, c) }}
+            </div>
+          </div>
+        </div>
+        <p class="turn-hint" v-if="game.next_player_id === user.id">À votre tour !</p>
+        <p class="turn-hint-other" v-else>En attente de l'adversaire...</p>
+      </div>
+
+      <!-- Écran de fin -->
+      <div v-if="game.opponent && game.state === 2" class="end-screen">
+        <div class="result-box">
+          <h1 v-if="game.winner_id" class="winner-title">
+            {{ game.winner_id === game.owner_id ? game.owner.name : game.opponent.name }}<br>
+            A GAGNÉ !
+          </h1>
+          <h1 v-else class="draw-title">MATCH NUL</h1>
+        </div>
+        <div class="end-actions">
+          <button @click="rejouer" class="btn-primary">REJOUER</button>
+          <button @click="goBack" class="btn-secondary">MENU PRINCIPAL</button>
+        </div>
+      </div>
+
+      <!-- Attente -->
+      <div v-else-if="!game.opponent" class="empty-state">
+        <div class="loader"></div>
+        <p>En attente d'un adversaire ...</p>
+        <div class="code-share">
+          <span>Code à partager :</span>
+          <strong>{{ game.code }}</strong>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.header {
+.game-view {
+  width: 100%;
+  max-width: 600px;
+}
+
+.game-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
+
+.btn-quit {
+  background-color: var(--text-light);
+  font-size: 0.8rem;
+}
+
+.game-card {
+  background-color: var(--card-bg);
+  padding: 30px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
 .players-info {
   display: flex;
-  justify-content: space-around;
-  margin: 20px 0;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
-.active {
-  font-weight: bold;
-  color: green;
-  text-decoration: underline;
+
+.player-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  transition: all 0.3s;
+  opacity: 0.6;
 }
+
+.player-slot.active {
+  background-color: #ecfdf5;
+  color: #059669;
+  opacity: 1;
+  box-shadow: 0 0 0 2px #10b981 inset;
+}
+
+.symbol {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.vs {
+  font-weight: 800;
+  color: var(--text-light);
+  font-size: 0.8rem;
+}
+
+.error-badge {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 8px 15px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
 .grid {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  margin: 30px 0;
 }
+
 .row {
   display: flex;
-  gap: 5px;
+  gap: 8px;
 }
+
 .cell {
-  width: 100px;
-  height: 100px;
-  border: 2px solid black;
+  width: 90px;
+  height: 90px;
+  background-color: var(--bg);
+  border-radius: var(--radius);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
+  font-size: 2.5rem;
+  font-weight: 800;
   cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
 }
-.cell:hover {
-  background-color: #f0f0f0;
+
+.cell:hover:not(.cell-filled) {
+  background-color: #f1f5f9;
+  border-color: var(--primary);
 }
-.turn-info {
-  text-align: center;
+
+.cell-filled {
+  cursor: default;
+  background-color: #fff;
+}
+
+.turn-hint {
+  color: #10b981;
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+.turn-hint-other {
+  color: var(--text-light);
   font-style: italic;
 }
-.error {
-  color: red;
-  text-align: center;
+
+.end-screen {
+  padding: 20px 0;
 }
-.end-game {
-  text-align: center;
-  padding: 50px;
-  border: 5px solid gold;
+
+.result-box {
+  margin-bottom: 30px;
 }
-.rematch-btn {
-  padding: 15px 30px;
-  font-size: 1.1rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 10px;
+
+.winner-title {
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.rematch-btn:hover {
-  background-color: #45a049;
+
+.end-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
-.back-btn {
-  padding: 10px 20px;
-  background-color: #666;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 10px;
+
+.code-share {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f1f5f9;
+  border-radius: var(--radius);
+  display: inline-block;
 }
-.back-btn:hover {
-  background-color: #555;
+
+.code-share strong {
+  margin-left: 10px;
+  font-size: 1.2rem;
+  color: var(--primary);
+}
+
+.loader {
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
 }
 </style>
