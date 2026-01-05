@@ -5,15 +5,9 @@ const DEFAULT_KEY = '{.gc67-o;j9;Z'
 const instance = axios.create({
   baseURL: 'https://morpion-api.edu.netlor.fr',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    Authorization: 'key={uXxoh!tZLQF'
   }
-})
-
-// Intercepteur pour injecter la clé dynamique avant chaque requête
-instance.interceptors.request.use(config => {
-  const key = localStorage.getItem('morpion_api_key') || DEFAULT_KEY
-  config.headers['Authorization'] = `key=${key}`
-  return config
 })
 
 export default instance
