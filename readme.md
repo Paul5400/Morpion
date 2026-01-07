@@ -1,4 +1,4 @@
-# 🎮 Morpion - Application Vue.js
+#  Morpion - Application Vue.js
 
 > Projet réalisé dans le cadre du TD4 - Web Client Avancé  
 > IUT Charlemagne - Université de Lorraine
