@@ -1,5 +1,10 @@
 <script>
-// Composant pour afficher les erreurs provenant de l'API
+// ============================================
+// EXERCICE 10 - Composant générique d'erreurs
+// ============================================
+// Composant réutilisable pour afficher les erreurs
+// de l'API dans Profile.vue et Join.vue
+
 export default {
   name: 'ErrorDisplay',
   props: {

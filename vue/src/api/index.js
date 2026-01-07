@@ -1,3 +1,9 @@
+// ============================================
+// EXERCICE 3 - Configuration d'Axios
+// ============================================
+// Configuration d'une instance Axios pré-configurée
+// avec l'URL de base et les headers nécessaires
+
 import axios from 'axios'
 
 // Clé par défaut utilisée si aucune clé n'est trouvée dans le stockage local

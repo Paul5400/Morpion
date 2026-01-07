@@ -1,10 +1,16 @@
 <script>
+// ============================================
+// EXERCICE 4 & 6 - Page d'accueil
+// ============================================
+// Page d'accueil avec les 3 accès principaux
+// + Création de partie (Exercice 6)
+
 import api from '@/api'
 
 export default {
   name: 'HomeView',
   methods: {
-    // Méthode pour créer une nouvelle partie
+    // EXERCICE 6 - Créer une nouvelle partie
     async createGame() {
       try {
         const response = await api.post('/api/games', {})
@@ -15,11 +21,11 @@ export default {
         alert('Impossible de créer une partie.')
       }
     },
-    // Redirection vers la vue pour rejoindre une partie
+    // EXERCICE 4 - Redirection vers la vue pour rejoindre une partie
     joinGame() {
       this.$router.push({ name: 'join' })
     },
-    // Redirection vers le profil utilisateur
+    // EXERCICE 4 - Redirection vers le profil utilisateur
     goUserProfile() {
       this.$router.push({ name: 'profile' })
     }

@@ -1,4 +1,10 @@
 <script>
+// ============================================
+// EXERCICE 5 - Profil utilisateur
+// ============================================
+// Formulaire pour éditer le nom et l'email
+// avec gestion des erreurs serveur
+
 import api from '@/api'
 import ErrorDisplay from '@/components/ErrorDisplay.vue'
 
@@ -18,7 +24,7 @@ export default {
       errors: []
     }
   },
-  // On récupère les données du profil avant d'afficher la page
+  // EXERCICE 5 - Hook beforeRouteEnter pour charger le profil
   async beforeRouteEnter(to, from, next) {
     try {
       const response = await api.get('/api/profile')
@@ -31,7 +37,7 @@ export default {
     }
   },
   methods: {
-    // Sauvegarde du profil et de la clé API
+    // EXERCICE 5 - Sauvegarde du profil via PUT /api/profile
     async saveProfile() {
       this.errors = []
       try {
@@ -40,6 +46,7 @@ export default {
         localStorage.setItem('morpion_api_key', this.apiKey)
         alert('Profil et clé API mis à jour avec succès !')
       } catch (error) {
+        // EXERCICE 5 - Affichage des erreurs retournées par le serveur
         if (error.response && error.response.data && error.response.data.errors) {
           this.errors = error.response.data.errors
         } else {
@@ -47,7 +54,7 @@ export default {
         }
       }
     },
-    // Retour à l'accueil
+    // EXERCICE 5 - Retour à l'accueil
     goBack() {
       this.$router.push({ name: 'home' })
     }

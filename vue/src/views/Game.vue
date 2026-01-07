@@ -1,14 +1,21 @@
 <script>
+// ============================================
+// EXERCICE 7 & 9 - Vue de la partie
+// ============================================
+// Affichage de la partie avec grille interactive
+// Synchronisation temps réel via WebSocket
+// Gestion des coups et détection de fin de partie
+
 import api from '@/api'
 
 export default {
   name: 'GameView',
   data() {
     return {
-      game: null,      // Données de la partie en cours
-      user: null,      // Profil de l'utilisateur actuel
-      socket: null,    // Connexion WebSocket pour le temps réel
-      error: null      // Message d'erreur éventuel
+      game: null,      // EXERCICE 7 - Données de la partie en cours
+      user: null,      // EXERCICE 7 - Profil de l'utilisateur actuel
+      socket: null,    // EXERCICE 7 - Connexion WebSocket pour le temps réel
+      error: null      // EXERCICE 9 - Message d'erreur éventuel
     }
   },
   // Récupération des données avant l'affichage de la route
@@ -29,18 +36,20 @@ export default {
       next(false)
     }
   },
-  // Fermeture de la socket quand on quitte la page
+  // EXERCICE 9 - Fermeture de la socket quand on quitte la page
   beforeUnmount() {
     if (this.socket) {
       this.socket.close()
     }
   },
   methods: {
-    // Établit la connexion WebSocket pour synchroniser les coups
+    // EXERCICE 7 - Méthode waitForOpponentMove pour la connexion WebSocket
     waitForOpponentMove() {
+      // EXERCICE 7 - Connexion aux WebSockets de l'API
       this.socket = new WebSocket('wss://morpion-api.edu.netlor.fr/websockets')
 
       this.socket.onopen = () => {
+        // EXERCICE 7 - Envoi du message de connexion requis
         const connectMsg = {
           action: 'connect',
           game_id: this.game.id,
@@ -51,12 +60,13 @@ export default {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data)
+        // EXERCICE 7 - Traitement des différents messages WebSocket
         switch (data.action) {
-          case 'opponent-join':
-          case 'opponent-play':
+          case 'opponent-join':  // EXERCICE 7 - Adversaire rejoint
+          case 'opponent-play':  // EXERCICE 7 - Adversaire joue
             this.refreshGameData() // Rafraîchit les données du plateau
             break
-          case 'opponent-quit':
+          case 'opponent-quit':  // EXERCICE 7 - Adversaire quitte
             alert('Votre adversaire a quitté la partie.')
             this.goBack()
             break
@@ -64,7 +74,7 @@ export default {
       }
     },
 
-    // Récupère les dernières données de la partie via l'API
+    // EXERCICE 7 - Rafraîchissement des données de la partie
     async refreshGameData() {
       try {
         const response = await api.get(`/api/games/${this.game.id}`)
@@ -74,26 +84,30 @@ export default {
       }
     },
 
-    // Retour à l'accueil
+    // EXERCICE 9 - Retour à l'accueil (bouton en fin de partie)
     goBack() {
       this.$router.push({ name: 'home' })
     },
 
-    // Détermine le symbole (X ou O) à afficher dans une case
+    // EXERCICE 7 - Détermine le symbole (X ou O) à afficher dans une case
     getCellChar(row, col) {
+      // EXERCICE 7 - Grille numérotée r1c1, r2c2, etc.
       const cellKey = `r${row}c${col}`
       const cellValue = this.game[cellKey]
       if (!cellValue) return ''
       return cellValue === 1 ? 'X' : 'O'
     },
 
-    // Envoie un coup au serveur
+    // EXERCICE 9 - Méthode play pour jouer un coup
     async play(row, col) {
       this.error = null
       try {
+        // EXERCICE 9 - Appel PATCH /api/games/:id/play/:row/:col
         const response = await api.patch(`/api/games/${this.game.id}/play/${row}/${col}`)
+        // EXERCICE 9 - L'API retourne la partie mise à jour
         this.game = response.data
       } catch (error) {
+        // EXERCICE 9 - Gestion des erreurs (case déjà jouée, etc.)
         if (error.response && error.response.data && error.response.data.errors) {
           this.error = error.response.data.errors[0]
         } else {

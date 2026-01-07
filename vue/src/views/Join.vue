@@ -1,4 +1,10 @@
 <script>
+// ============================================
+// EXERCICE 8 - Rejoindre une partie
+// ============================================
+// Formulaire pour saisir un code de partie
+// et rejoindre une partie existante
+
 import api from '@/api'
 import ErrorDisplay from '@/components/ErrorDisplay.vue'
 
@@ -14,16 +20,16 @@ export default {
     }
   },
   methods: {
-    // Méthode pour rejoindre une partie existante
+    // EXERCICE 8 - Rejoindre une partie via PATCH /api/games/:code/join
     async joinGame() {
       this.errors = []
       try {
         // Envoi de la requête de rejoindre avec le code de partie
         const response = await api.patch(`/api/games/${this.gameCode}/join`)
-        // Redirection vers l'écran de jeu
+        // EXERCICE 8 - Redirection vers la partie avec l'ID reçu
         this.$router.push({ name: 'game', params: { id: response.data.id } })
       } catch (error) {
-        // Gestion des erreurs renvoyées par l'API
+        // EXERCICE 8 - Affichage des erreurs (ex: code invalide)
         if (error.response && error.response.data && error.response.data.errors) {
           this.errors = error.response.data.errors
         } else {
